@@ -1,0 +1,60 @@
+import { create } from 'zustand';
+
+export interface User {
+  id: number;
+  email: string;
+  plan: string;
+  name: string;
+  trialUsed?: boolean;
+  subscriptionExpiresAt?: string | null;
+}
+
+interface AppStore {
+  user: User | null;
+  token: string | null;
+  /** True once AuthHydrator has finished the initial /auth/me round-trip.
+   *  RequireSubscription uses this to avoid flashing the paywall while
+   *  the cached (possibly stale) user is being refreshed from the server. */
+  authReady: boolean;
+  setAuth: (user: User, token: string) => void;
+  setAuthReady: (v: boolean) => void;
+  clearAuth: () => void;
+  activeProjectId: number | null;
+  activeSheetId: number | null;
+  setActive: (projectId: number, sheetId: number) => void;
+  hasUnsaved: boolean;
+  setUnsaved: (v: boolean) => void;
+}
+
+function loadStoredUser(): User | null {
+  if (typeof window === 'undefined') return null;
+  try { const raw = localStorage.getItem('user'); return raw ? JSON.parse(raw) : null; } catch { return null; }
+}
+
+export const useAppStore = create<AppStore>((set) => ({
+  user: loadStoredUser(),
+  token: typeof window !== 'undefined' ? localStorage.getItem('token') : null,
+  authReady: false,
+  setAuth: (user, token) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    set({ user, token, authReady: true });
+  },
+  setAuthReady: (v) => set({ authReady: v }),
+  clearAuth: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    set({ user: null, token: null, authReady: true });
+  },
+  activeProjectId: typeof window !== 'undefined' ? (Number(localStorage.getItem('activeProjectId')) || null) : null,
+  activeSheetId:   typeof window !== 'undefined' ? (Number(localStorage.getItem('activeSheetId'))   || null) : null,
+  setActive: (projectId, sheetId) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('activeProjectId', String(projectId));
+      localStorage.setItem('activeSheetId',   String(sheetId));
+    }
+    set({ activeProjectId: projectId, activeSheetId: sheetId });
+  },
+  hasUnsaved: false,
+  setUnsaved: (v) => set({ hasUnsaved: v }),
+}));

@@ -1,0 +1,26 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AdminController } from './admin.controller';
+import { TariffOperation } from './tariff-operation.entity';
+import { TariffConfig } from './tariff-config.entity';
+import { AppSetting } from './app-setting.entity';
+import { User } from '../users/user.entity';
+import { Project } from '../projects/project.entity';
+import { Sheet } from '../sheets/sheet.entity';
+import { Template } from '../templates/template.entity';
+import { Folder } from '../folders/folder.entity';
+import { PriceList, Manufacturer, CatalogProduct, CatalogTile, CatalogCategory } from '../catalog/entities/catalog.entities';
+import { UserActivityLog } from './user-activity-log.entity';
+import { EquipmentRow } from '../equipment/equipment-row.entity';
+
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([
+      User, Project, Sheet, Template, Folder,
+      PriceList, Manufacturer, CatalogProduct, CatalogTile, CatalogCategory,
+      TariffOperation, TariffConfig, AppSetting, UserActivityLog, EquipmentRow,
+    ]),
+  ],
+  controllers: [AdminController],
+})
+export class AdminModule {}
